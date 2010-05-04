@@ -1,0 +1,45 @@
+Package to use Maxima (via ASDF) as a package within Common Lisp.
+
+Steps required:
+
+1. Download Maxima source code
+
+2. Modify the Maxima ASDF file, src/maxima.asd. It is written in a
+non-standard way that creates a "binary-ecl" directory with FASL files
+everywhere it's used. Comment out the following section:
+
+(defvar *binary-output-dir* "binary-ecl")
+
+(defmethod output-files :around ((operation compile-op) (c source-file))
+  (let* ((source (component-pathname c))
+        (source-dir (pathname-directory source))
+        (paths (call-next-method))
+        (this-dir (pathname-directory (first (directory ""))))
+        (binary-dir (append this-dir (list *binary-output-dir*))))
+    (mapcar #'(lambda (path)
+               (merge-pathnames 
+                    (make-pathname 
+                        :directory
+                            (append binary-dir 
+                                (last source-dir 
+                                        (- (length source-dir) 
+                                            (length this-dir)))))
+                    path))
+            paths)))
+
+3. If you're using Common-Lisp-Controller, add src/maxima.asd to the list of user packages via:
+
+clc-register-user-package maxima.asd
+
+4. Within Common Lisp (I used SBCL... not sure how others work), load
+the Maxima system, e.g. (require 'maxima) or (asdf:operate
+'asdf:load-op 'maxima) A whole bunch of error warnings will occur
+during the initial compile. I just hit "accept" for all of them. It
+still runs for my purposes.
+
+5. Now you can use BLD-MAXIMA-PKG. It exports the SIMP function which
+algebraically simplifies Common-Lisp math expressions with other
+unrecognized non-math functions/macros that are treated as symbols
+using Maxima. *MAXIMA-LISP-TABLE* includes translations between Common
+Lisp math functions and those used in Maxima's internal simplification
+routines.
