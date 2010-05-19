@@ -9,6 +9,6 @@
     :license "GPL"
     :description "Load Maxima as a library and provide interface"
     :components 
-    ((:file "maxima-pkg"))
-    :depends-on ("maxima"))
+    ((:file "maxima-pkg")))
+
 

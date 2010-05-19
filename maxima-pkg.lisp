@@ -1,8 +1,33 @@
 (defpackage :bld-maxima-pkg 
-  (:use :common-lisp :maxima)
+  (:use :common-lisp)
   (:export :simp))
 
 (in-package :bld-maxima-pkg)
+
+(eval-when (:compile-toplevel :load-toplevel)
+  (load "c:/Documents and Settings/BDiedrich/src/cl/maxima-5.21.1/lisp-utils/defsystem.lisp")
+  (load "c:/Documents and Settings/BDiedrich/src/cl/maxima-5.21.1/src/maxima.system")
+  (funcall (intern (symbol-name :operate-on-system) :mk) "maxima" :load :verbose t))
+
+(let ()
+  (setf maxima::*load-verbose* nil)
+  (setf *debugger-hook* #'maxima::maxima-lisp-debugger)
+  (let ((input-stream maxima::*standard-input*)
+	(batch-flag nil))
+    (progn
+      (maxima::set-readtable-for-macsyma)
+      (setf maxima::*read-default-float-format* 'double-float))
+    (catch 'to-lisp
+      (maxima::initialize-real-and-run-time)
+      (intl::setlocale)
+      (maxima::set-locale-subdir)
+      (maxima::adjust-character-encoding)
+      (maxima::set-pathnames)
+      (when (boundp 'maxima::*maxima-prefix*)
+	(push (pathname (concatenate 'string maxima::*maxima-prefix* "/share/locale/"))
+	      intl::*locale-directories*))
+      (setf (values input-stream batch-flag)
+	    (maxima::process-maxima-args input-stream batch-flag)))))
 
 (defparameter *maxima-package* (find-package :maxima))
 
@@ -55,9 +80,11 @@
 	       (setf (gethash head *maxima-lisp-table*) translation)
 	       (setf (gethash translation *maxima-lisp-table*) head)
 	       (setq head-translated translation)))
-	   (maxima::simplify
-	    (cons (list head-translated)
-		  (mapcar #'translate-to-maxima (cdr expr))))))))
+	   (maxima::mfuncall 
+	    'maxima::$trigsimp
+	    (maxima::simplify
+	     (cons (list head-translated)
+		   (mapcar #'translate-to-maxima (cdr expr)))))))))
 
 (defun translate-from-maxima (expr)
   (cond ((atom expr)
