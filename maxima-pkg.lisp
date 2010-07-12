@@ -80,11 +80,10 @@
 	       (setf (gethash head *maxima-lisp-table*) translation)
 	       (setf (gethash translation *maxima-lisp-table*) head)
 	       (setq head-translated translation)))
-	   (maxima::mfuncall 
-	    'maxima::$trigsimp
-	    (maxima::simplify
-	     (cons (list head-translated)
-		   (mapcar #'translate-to-maxima (cdr expr)))))))))
+	   (maxima::mfuncall 'maxima::$trigsimp
+			     (maxima::simplify
+			      (cons (list head-translated)
+				    (mapcar #'translate-to-maxima (cdr expr)))))))))
 
 (defun translate-from-maxima (expr)
   (cond ((atom expr)
