@@ -1,4 +1,4 @@
-Package to use Maxima (via ASDF) as a package within Common Lisp.
+Package to use Maxima as a package within Common Lisp.
 
 Steps required:
 
